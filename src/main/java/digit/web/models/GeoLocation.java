@@ -1,6 +1,7 @@
 package digit.web.models;
 
 import java.util.Objects;
+
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonCreator;
 import io.swagger.v3.oas.annotations.media.Schema;
@@ -21,18 +22,18 @@ import lombok.Builder;
 @AllArgsConstructor
 @NoArgsConstructor
 @Builder
-public class GeoLocation   {
-        @JsonProperty("latitude")
+public class GeoLocation {
+    @JsonProperty("latitude")
 
-                private Double latitude = null;
+    private Double latitude = null;
 
-        @JsonProperty("longitude")
+    @JsonProperty("longitude")
 
-                private Double longitude = null;
+    private Double longitude = null;
 
-        @JsonProperty("additionalDetails")
+    @JsonProperty("additionalDetails")
 
-                private Object additionalDetails = null;
+    private Object additionalDetails = null;
 
 
 }

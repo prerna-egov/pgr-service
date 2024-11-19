@@ -1,6 +1,7 @@
 package digit.web.models;
 
 import java.util.Objects;
+
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonCreator;
 import digit.web.models.Boundary;
@@ -15,7 +16,7 @@ import lombok.Data;
 import lombok.Builder;
 
 /**
- * Representation of a address. Indiavidual APIs may choose to extend from this using allOf if more details needed to be added in their case. 
+ * Representation of a address. Indiavidual APIs may choose to extend from this using allOf if more details needed to be added in their case.
  */
 @Schema(description = "Representation of a address. Indiavidual APIs may choose to extend from this using allOf if more details needed to be added in their case. ")
 @Validated
@@ -24,74 +25,76 @@ import lombok.Builder;
 @AllArgsConstructor
 @NoArgsConstructor
 @Builder
-public class Address   {
-        @JsonProperty("tenantId")
-          @NotNull
+public class Address {
+    @JsonProperty("tenantId")
+    @NotNull
 
-                private String tenantId = null;
+    private String tenantId = null;
 
-        @JsonProperty("doorNo")
+    @JsonProperty("doorNo")
 
-                private String doorNo = null;
+    private String doorNo = null;
 
-        @JsonProperty("plotNo")
+    @JsonProperty("plotNo")
 
-                private String plotNo = null;
+    private String plotNo = null;
 
-        @JsonProperty("id")
+    @JsonProperty("id")
 
-                private String id = null;
+    private String id = null;
 
-        @JsonProperty("landmark")
+    @JsonProperty("landmark")
 
-                private String landmark = null;
+    private String landmark = null;
 
-        @JsonProperty("city")
+    @JsonProperty("city")
 
-                private String city = null;
+    private String city = null;
 
-        @JsonProperty("district")
+    @JsonProperty("district")
 
-                private String district = null;
+    private String district = null;
 
-        @JsonProperty("region")
+    @JsonProperty("region")
 
-                private String region = null;
+    private String region = null;
 
-        @JsonProperty("state")
+    @JsonProperty("state")
 
-                private String state = null;
+    private String state = null;
 
-        @JsonProperty("country")
+    @JsonProperty("country")
 
-                private String country = null;
+    private String country = null;
 
-        @JsonProperty("pincode")
+    @JsonProperty("pincode")
 
-                private String pincode = null;
+    private String pincode = null;
 
-        @JsonProperty("additionDetails")
+    @JsonProperty("additionDetails")
 
-                private String additionDetails = null;
+    private String additionDetails = null;
 
-        @JsonProperty("buildingName")
+    @JsonProperty("buildingName")
 
-        @Size(min=2,max=64)         private String buildingName = null;
+    @Size(min = 2, max = 64)
+    private String buildingName = null;
 
-        @JsonProperty("street")
+    @JsonProperty("street")
 
-        @Size(min=2,max=64)         private String street = null;
+    @Size(min = 2, max = 64)
+    private String street = null;
 
-        @JsonProperty("locality")
-          @NotNull
+    @JsonProperty("locality")
+    @NotNull
 
-          @Valid
-                private Boundary locality = null;
+    @Valid
+    private Boundary locality = null;
 
-        @JsonProperty("geoLocation")
+    @JsonProperty("geoLocation")
 
-          @Valid
-                private GeoLocation geoLocation = null;
+    @Valid
+    private GeoLocation geoLocation = null;
 
 
 }
