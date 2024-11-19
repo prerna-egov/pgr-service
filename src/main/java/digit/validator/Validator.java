@@ -4,6 +4,7 @@ import com.jayway.jsonpath.JsonPath;
 import digit.config.Configuration;
 import digit.util.HRMSUtil;
 import digit.util.MdmsUtil;
+import digit.web.models.RequestSearchCriteria;
 import digit.web.models.ServiceRequest;
 import org.egov.common.contract.request.RequestInfo;
 import org.egov.common.contract.request.User;
@@ -121,6 +122,40 @@ public class Validator {
 
         if(!errorMap.isEmpty())
             throw new CustomException(errorMap);
+
+    }
+
+    public void validateSearchParam(RequestInfo requestInfo, RequestSearchCriteria criteria){
+
+        if(requestInfo.getUserInfo().getType().equalsIgnoreCase("EMPLOYEE" ) && criteria.isEmpty())
+            throw new CustomException("INVALID_SEARCH","Search without params is not allowed");
+
+
+        String allowedParamStr = null;
+
+        if(requestInfo.getUserInfo().getType().equalsIgnoreCase("CITIZEN" ))
+            allowedParamStr = config.getAllowedCitizenSearchParameters();
+        else if(requestInfo.getUserInfo().getType().equalsIgnoreCase("EMPLOYEE" ) || requestInfo.getUserInfo().getType().equalsIgnoreCase("SYSTEM") )
+            allowedParamStr = config.getAllowedEmployeeSearchParameters();
+        else throw new CustomException("INVALID SEARCH","The userType: "+requestInfo.getUserInfo().getType()+
+                    " does not have any search config");
+
+        List<String> allowedParams = Arrays.asList(allowedParamStr.split(","));
+
+        if(criteria.getServiceCode()!=null && !allowedParams.contains("serviceCode"))
+            throw new CustomException("INVALID SEARCH","Search on serviceCode is not allowed");
+
+        if(criteria.getServiceRequestId()!=null && !allowedParams.contains("serviceRequestId"))
+            throw new CustomException("INVALID SEARCH","Search on serviceRequestId is not allowed");
+
+        if(criteria.getApplicationStatus()!=null && !allowedParams.contains("applicationStatus"))
+            throw new CustomException("INVALID SEARCH","Search on applicationStatus is not allowed");
+
+        if(criteria.getMobileNo()!=null && !allowedParams.contains("mobileNumber"))
+            throw new CustomException("INVALID SEARCH","Search on mobileNumber is not allowed");
+
+        if(criteria.getIds()!=null && !allowedParams.contains("ids"))
+            throw new CustomException("INVALID SEARCH","Search on ids is not allowed");
 
     }
 }

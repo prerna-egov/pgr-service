@@ -105,4 +105,28 @@ public class Configuration {
     @Value("${egov.idgen.pgr.serviceRequestId.format}")
     private String serviceRequestIdGenFormat;
 
+    @Value("${citizen.allowed.search.params}")
+    private String allowedCitizenSearchParameters;
+
+    @Value("${employee.allowed.search.params}")
+    private String allowedEmployeeSearchParameters;
+
+    @Value("${pgr.default.offset}")
+    private Integer defaultOffset;
+
+    @Value("${pgr.default.limit}")
+    private Integer defaultLimit;
+
+    @Value("${pgr.search.max.limit}")
+    private Integer maxLimit;
+
+    @Value("${egov.dynamicdata.period}")
+    private String numberOfDays;
+
+    @Value("${state.level.tenantid.length}")
+    private Integer stateLevelTenantIdLength;
+
+    @Value("${egov.complaints.category}")
+    private String complaintTypes;
+
 }

@@ -3,14 +3,12 @@ package digit.web.controllers;
 
 import digit.service.PGRService;
 import digit.util.ResponseInfoFactory;
-import digit.web.models.ErrorRes;
-import digit.web.models.ServiceRequest;
-import digit.web.models.ServiceResponse;
+import digit.web.models.*;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import digit.web.models.ServiceWrapper;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.enums.ParameterIn;
 import io.swagger.v3.oas.annotations.media.Schema;
+import org.egov.common.contract.request.RequestInfo;
 import org.egov.common.contract.response.ResponseInfo;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -35,6 +33,9 @@ import jakarta.validation.Valid;
 import jakarta.servlet.http.HttpServletRequest;
 
 import java.util.Optional;
+
+import static digit.config.ServiceConstants.AVERAGE_RESOLUTION_TIME;
+import static digit.config.ServiceConstants.COMPLAINTS_RESOLVED;
 
 @jakarta.annotation.Generated(value = "org.egov.codegen.SpringBootCodegen", date = "2024-11-18T10:55:45.903607265+05:30[Asia/Kolkata]")
 @Controller
@@ -72,31 +73,48 @@ public class RequestApiController {
 
     @RequestMapping(value = "/request/_create", method = RequestMethod.POST)
     public ResponseEntity<ServiceResponse> requestCreatePost(@Parameter(in = ParameterIn.DEFAULT, description = "Request schema.", required = true, schema = @Schema()) @Valid @RequestBody ServiceRequest body) {
-        try {
             ServiceRequest enrichedReq = pgrService.create(body);
             ResponseInfo responseInfo = responseInfoFactory.createResponseInfoFromRequestInfo(body.getRequestInfo(), true);
             ServiceWrapper serviceWrapper = ServiceWrapper.builder().service(enrichedReq.getPgrEntity().getService()).workflow(enrichedReq.getPgrEntity().getWorkflow()).build();
             ServiceResponse response = ServiceResponse.builder().responseInfo(responseInfo).pgREntities(Collections.singletonList(serviceWrapper)).build();
             return new ResponseEntity<>(response, HttpStatus.OK);
-        } catch (Exception e) {
-            return new ResponseEntity<ServiceResponse>(HttpStatus.INTERNAL_SERVER_ERROR);
-        }
 
-//        return new ResponseEntity<ServiceResponse>(HttpStatus.NOT_IMPLEMENTED);
     }
 
     @RequestMapping(value = "/request/_search", method = RequestMethod.POST)
-    public ResponseEntity<ServiceResponse> requestSearchPost(@NotNull @Parameter(in = ParameterIn.QUERY, description = "Unique id for a tenant.", required = true, schema = @Schema()) @Valid @RequestParam(value = "tenantId", required = true) String tenantId, @Parameter(in = ParameterIn.QUERY, description = "Allows search for service type - comma separated list", schema = @Schema()) @Valid @RequestParam(value = "serviceCode", required = false) List<String> serviceCode, @Parameter(in = ParameterIn.QUERY, description = "Search by list of UUID", schema = @Schema()) @Valid @RequestParam(value = "ids", required = false) List<String> ids, @Parameter(in = ParameterIn.QUERY, description = "Search by mobile number of service requester", schema = @Schema()) @Valid @RequestParam(value = "mobileNo", required = false) String mobileNo, @Parameter(in = ParameterIn.QUERY, description = "Search by serviceRequestId of the complaint", schema = @Schema()) @Valid @RequestParam(value = "serviceRequestId", required = false) String serviceRequestId, @Parameter(in = ParameterIn.QUERY, description = "Search by list of Application Status", schema = @Schema()) @Valid @RequestParam(value = "applicationStatus", required = false) List<String> applicationStatus) {
-        String accept = request.getHeader("Accept");
-        if (accept != null && accept.contains("application/json")) {
+    public ResponseEntity<ServiceResponse> requestSearchPost(
+            @Valid @RequestBody RequestInfoWrapper requestInfoWrapper,
+            @Valid RequestSearchCriteria requestSearchCriteria
+//            @NotNull @Parameter(in = ParameterIn.QUERY, description = "Tenant ID", required = true, schema = @Schema())  @Valid @RequestParam(value = "tenantId", required = true) String tenantId,
+//            @Parameter(in = ParameterIn.QUERY, description = "Service type (comma-separated)", schema = @Schema()) @Valid @RequestParam(value = "serviceCode", required = false) List<String> serviceCode,
+//            @Parameter(in = ParameterIn.QUERY, description = "List of UUIDs", schema = @Schema()) @Valid @RequestParam(value = "ids", required = false) List<String> ids,
+//            @Parameter(in = ParameterIn.QUERY, description = "Requester's mobile number", schema = @Schema()) @Valid @RequestParam(value = "mobileNo", required = false) String mobileNo,
+//            @Parameter(in = ParameterIn.QUERY, description = "Complaint serviceRequestId", schema = @Schema()) @Valid @RequestParam(value = "serviceRequestId", required = false) String serviceRequestId,
+//            @Parameter(in = ParameterIn.QUERY, description = "Application Status list", schema = @Schema()) @Valid @RequestParam(value = "applicationStatus", required = false) List<String> applicationStatus
+    ) {
             try {
-                return new ResponseEntity<ServiceResponse>(objectMapper.readValue("{  \"responseInfo\" : \"{}\",  \"PGREntities\" : [ \"{}\", \"{}\" ]}", ServiceResponse.class), HttpStatus.NOT_IMPLEMENTED);
-            } catch (IOException e) {
+                String tenantId = requestSearchCriteria.getTenantId();
+                ResponseInfo responseInfo = responseInfoFactory.createResponseInfoFromRequestInfo(requestInfoWrapper.getRequestInfo(), true);
+                List<ServiceWrapper> serviceWrappers = pgrService.search(requestInfoWrapper.getRequestInfo(), requestSearchCriteria);
+                Map<String,Integer> dynamicData = pgrService.getDynamicData(tenantId);
+
+                int complaintsResolved = dynamicData.get(COMPLAINTS_RESOLVED);
+                int averageResolutionTime = dynamicData.get(AVERAGE_RESOLUTION_TIME);
+                int complaintTypes = pgrService.getComplaintTypes();
+
+                ServiceResponse response = ServiceResponse.builder()
+                        .responseInfo(responseInfo)
+                        .pgREntities(serviceWrappers)
+                        .complaintsResolved(complaintsResolved)
+                        .averageResolutionTime(averageResolutionTime)
+                        .complaintTypes(complaintTypes)
+                        .build();
+
+                return new ResponseEntity<>(response, HttpStatus.OK);
+            } catch (Exception e) {
                 return new ResponseEntity<ServiceResponse>(HttpStatus.INTERNAL_SERVER_ERROR);
             }
-        }
 
-        return new ResponseEntity<ServiceResponse>(HttpStatus.NOT_IMPLEMENTED);
     }
 
     @RequestMapping(value = "/request/_update", method = RequestMethod.POST)

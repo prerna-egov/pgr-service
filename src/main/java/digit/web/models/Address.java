@@ -4,6 +4,7 @@ import java.util.Objects;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonCreator;
+import com.fasterxml.jackson.databind.JsonNode;
 import digit.web.models.Boundary;
 import digit.web.models.GeoLocation;
 import io.swagger.v3.oas.annotations.media.Schema;
@@ -73,7 +74,7 @@ public class Address {
 
     @JsonProperty("additionDetails")
 
-    private String additionDetails = null;
+    private JsonNode additionDetails = null;
 
     @JsonProperty("buildingName")
 

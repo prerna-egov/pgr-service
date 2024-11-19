@@ -53,4 +53,7 @@ public class ServiceConstants {
     public static final String HRMS_DEPARTMENT_JSONPATH = "$.Employees.*.assignments.*.department";
     public static final String MDMS_DEPARTMENT_SEARCH = "$.MdmsRes.RAINMAKER-PGR.ServiceDefs[?(@.serviceCode=='{SERVICEDEF}')].department";
     public static final String USERTYPE_CITIZEN = "CITIZEN";
+
+    public static final String COMPLAINTS_RESOLVED = "complaintsResolved";
+    public static final String AVERAGE_RESOLUTION_TIME = "averageResolutionTime";
 }

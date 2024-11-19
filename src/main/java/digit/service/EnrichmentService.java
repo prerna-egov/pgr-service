@@ -3,10 +3,7 @@ package digit.service;
 import digit.config.Configuration;
 import digit.repository.IdGenRepository;
 import digit.util.PGRUtil;
-import digit.web.models.AuditDetails;
-import digit.web.models.Service;
-import digit.web.models.ServiceRequest;
-import digit.web.models.Workflow;
+import digit.web.models.*;
 import org.egov.common.contract.idgen.IdResponse;
 import org.egov.common.contract.request.RequestInfo;
 //import org.springframework.stereotype.Service;
@@ -84,6 +81,29 @@ public class EnrichmentService {
 
         return idResponses.stream()
                 .map(IdResponse::getId).collect(Collectors.toList());
+    }
+
+    public void enrichSearchRequest(RequestInfo requestInfo, RequestSearchCriteria criteria) {
+        if(criteria.isEmpty() && requestInfo.getUserInfo().getType().equalsIgnoreCase(USERTYPE_CITIZEN)){
+            String citizenMobileNumber = requestInfo.getUserInfo().getUserName();
+            criteria.setMobileNo(citizenMobileNumber);
+        }
+
+        String tenantId = (criteria.getTenantId()!=null) ? criteria.getTenantId() : requestInfo.getUserInfo().getTenantId();
+
+        //TODO
+//        if(criteria.getMobileNo()!=null){
+//            userService.enrichUserIds(tenantId, criteria);
+//        }
+
+        if(criteria.getLimit()==null)
+            criteria.setLimit(config.getDefaultLimit());
+
+        if(criteria.getOffset()==null)
+            criteria.setOffset(config.getDefaultOffset());
+
+        if(criteria.getLimit()!=null && criteria.getLimit() > config.getMaxLimit())
+            criteria.setLimit(config.getMaxLimit());
     }
 
 }
