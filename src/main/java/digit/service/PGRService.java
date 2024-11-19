@@ -23,21 +23,23 @@ public class PGRService {
     private final Producer producer;
     private final Configuration config;
     private final ServiceRequestRepository repository;
+    private final WorkflowService workflowService;
 
-    public PGRService(MdmsUtil mdmsUtil, Validator validator, EnrichmentService enrichmentService, Producer producer, Configuration config, ServiceRequestRepository repository) {
+    public PGRService(MdmsUtil mdmsUtil, Validator validator, EnrichmentService enrichmentService, Producer producer, Configuration config, ServiceRequestRepository repository, WorkflowService workflowService) {
         this.mdmsUtil = mdmsUtil;
         this.validator = validator;
         this.enrichmentService = enrichmentService;
         this.producer = producer;
         this.config = config;
         this.repository = repository;
+        this.workflowService = workflowService;
     }
 
     public ServiceRequest create(ServiceRequest request){
         Object mdmsData = mdmsUtil.getServiceDefFromMdms(request);
         validator.validateCreate(request, mdmsData);
         enrichmentService.enrichCreateRequest(request);
-//        workflowService.updateWorkflowStatus(request);
+        workflowService.updateWorkflowStatus(request);
         producer.push(config.getCreateTopic(),request);
         return request;
     }

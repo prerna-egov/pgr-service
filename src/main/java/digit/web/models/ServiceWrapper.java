@@ -3,6 +3,7 @@ package digit.web.models;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import jakarta.validation.constraints.NotNull;
 import lombok.*;
+import org.egov.common.contract.models.Workflow;
 
 import javax.validation.Valid;
 
