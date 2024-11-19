@@ -11,7 +11,7 @@ import org.egov.tracer.model.CustomException;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.util.CollectionUtils;
 import org.springframework.util.StringUtils;
-
+import org.egov.common.contract.models.Workflow;
 import java.util.List;
 import java.util.UUID;
 import java.util.stream.Collectors;
@@ -56,8 +56,8 @@ public class EnrichmentService {
         service.getAddress().setTenantId(tenantId);
 //        service.setActive(true);
 
-        if(workflow.getVerificationDocuments()!=null){
-            workflow.getVerificationDocuments().forEach(document -> {
+        if(workflow.getDocuments()!=null){
+            workflow.getDocuments().forEach(document -> {
                 document.setId(UUID.randomUUID().toString());
             });
         }

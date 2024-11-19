@@ -8,7 +8,7 @@ import digit.util.PGRUtil;
 import digit.web.models.RequestSearchCriteria;
 import digit.web.models.Service;
 import digit.web.models.ServiceWrapper;
-import digit.web.models.Workflow;
+import org.egov.common.contract.models.Workflow;
 import lombok.extern.slf4j.Slf4j;
 import org.egov.tracer.model.CustomException;
 import org.egov.tracer.model.ServiceCallException;
