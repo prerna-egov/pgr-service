@@ -39,6 +39,15 @@ public class ServiceResponse {
     @Valid
     private List<ServiceWrapper> pgREntities = null;
 
+    @JsonProperty("complaintsResolved")
+    private int complaintsResolved;
+
+    @JsonProperty("averageResolutionTime")
+    private int averageResolutionTime;
+
+    @JsonProperty("complaintTypes")
+    private int complaintTypes;
+
 
     public ServiceResponse addPgREntitiesItem(ServiceWrapper pgREntitiesItem) {
         if (this.pgREntities == null) {
