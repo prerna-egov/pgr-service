@@ -11,6 +11,7 @@ import org.egov.common.contract.idgen.IdResponse;
 import org.egov.common.contract.request.RequestInfo;
 //import org.springframework.stereotype.Service;
 import org.egov.tracer.model.CustomException;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.util.CollectionUtils;
 import org.springframework.util.StringUtils;
 
@@ -26,12 +27,14 @@ public class EnrichmentService {
     private final PGRUtil pgrUtil;
     private final UserService userService;
     private final Configuration config;
-    private IdGenRepository idGenRepository;
+    private final IdGenRepository idGenRepository;
 
-    public EnrichmentService(PGRUtil pgrUtil, UserService userService, Configuration config) {
+    @Autowired
+    public EnrichmentService(PGRUtil pgrUtil, UserService userService, Configuration config, IdGenRepository idGenRepository) {
         this.pgrUtil = pgrUtil;
         this.userService = userService;
         this.config = config;
+        this.idGenRepository = idGenRepository;
     }
 
     public void enrichCreateRequest(ServiceRequest serviceRequest){
@@ -65,9 +68,9 @@ public class EnrichmentService {
         if(StringUtils.isEmpty(service.getAccountId()))
             service.setAccountId(service.getCitizen().getUuid());
 
-//        List<String> customIds = getIdList(requestInfo,tenantId,config.getServiceRequestIdGenName(),config.getServiceRequestIdGenFormat(),1);
-//
-//        service.setServiceRequestId(customIds.get(0));
+        List<String> customIds = getIdList(requestInfo,tenantId,config.getServiceRequestIdGenName(),config.getServiceRequestIdGenFormat(),1);
+
+        service.setServiceRequestId(customIds.get(0));
 
 
     }
