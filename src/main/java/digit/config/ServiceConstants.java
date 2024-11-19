@@ -59,4 +59,6 @@ public class ServiceConstants {
 
     public static final String PGR_MODULENAME = "PGR";
     public static final String PGR_BUSINESSSERVICE = "PGR";
+
+    public static final String PGR_WF_REOPEN = "REOPEN";
 }

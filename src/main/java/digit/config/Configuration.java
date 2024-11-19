@@ -129,4 +129,7 @@ public class Configuration {
     @Value("${egov.complaints.category}")
     private String complaintTypes;
 
+    @Value("${pgr.complain.idle.time}")
+    private Long complainMaxIdleTime;
+
 }

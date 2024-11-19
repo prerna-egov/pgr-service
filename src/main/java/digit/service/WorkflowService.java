@@ -7,16 +7,18 @@ import digit.repository.rowmapper.PGRRowMapper;
 import digit.web.models.RequestInfoWrapper;
 import digit.web.models.Service;
 import digit.web.models.ServiceRequest;
+import digit.web.models.ServiceWrapper;
+import org.apache.commons.lang3.StringUtils;
 import org.egov.common.contract.models.Workflow;
+import org.egov.common.contract.request.RequestInfo;
 import org.egov.common.contract.request.User;
 import org.egov.common.contract.workflow.*;
 import org.egov.tracer.model.CustomException;
 import org.springframework.util.CollectionUtils;
 import static digit.config.ServiceConstants.*;
 
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.List;
+import java.util.*;
+import java.util.stream.Collectors;
 
 @org.springframework.stereotype.Service
 public class WorkflowService {
@@ -68,6 +70,90 @@ public class WorkflowService {
         return processInstance;
     }
 
+    public List<ServiceWrapper> enrichWorkflow(RequestInfo requestInfo, List<ServiceWrapper> serviceWrappers) {
+
+        // FIX ME FOR BULK SEARCH
+        Map<String, List<ServiceWrapper>> tenantIdToServiceWrapperMap = getTenantIdToServiceWrapperMap(serviceWrappers);
+
+        List<ServiceWrapper> enrichedServiceWrappers = new ArrayList<>();
+
+        for(String tenantId : tenantIdToServiceWrapperMap.keySet()) {
+
+            List<String> serviceRequestIds = new ArrayList<>();
+
+            List<ServiceWrapper> tenantSpecificWrappers = tenantIdToServiceWrapperMap.get(tenantId);
+
+            tenantSpecificWrappers.forEach(pgrEntity -> {
+                serviceRequestIds.add(pgrEntity.getService().getServiceRequestId());
+            });
+
+            RequestInfoWrapper requestInfoWrapper = RequestInfoWrapper.builder().requestInfo(requestInfo).build();
+
+            StringBuilder searchUrl = getprocessInstanceSearchURL(tenantId, StringUtils.join(serviceRequestIds, ','));
+            Object result = repository.fetchResult(searchUrl, requestInfoWrapper);
+
+
+            ProcessInstanceResponse processInstanceResponse = null;
+            try {
+                processInstanceResponse = mapper.convertValue(result, ProcessInstanceResponse.class);
+            } catch (IllegalArgumentException e) {
+                throw new CustomException("PARSING ERROR", "Failed to parse response of workflow processInstance search");
+            }
+
+            if (CollectionUtils.isEmpty(processInstanceResponse.getProcessInstances()) || processInstanceResponse.getProcessInstances().size() != serviceRequestIds.size())
+                throw new CustomException("WORKFLOW_NOT_FOUND", "The workflow object is not found");
+
+            Map<String, Workflow> businessIdToWorkflow = getWorkflow(processInstanceResponse.getProcessInstances());
+
+            tenantSpecificWrappers.forEach(pgrEntity -> {
+                pgrEntity.setWorkflow(businessIdToWorkflow.get(pgrEntity.getService().getServiceRequestId()));
+            });
+
+            enrichedServiceWrappers.addAll(tenantSpecificWrappers);
+        }
+
+        return enrichedServiceWrappers;
+
+    }
+
+    private Map<String, List<ServiceWrapper>> getTenantIdToServiceWrapperMap(List<ServiceWrapper> serviceWrappers) {
+        Map<String, List<ServiceWrapper>> resultMap = new HashMap<>();
+        for(ServiceWrapper serviceWrapper : serviceWrappers){
+            if(resultMap.containsKey(serviceWrapper.getService().getTenantId())){
+                resultMap.get(serviceWrapper.getService().getTenantId()).add(serviceWrapper);
+            }else{
+                List<ServiceWrapper> serviceWrapperList = new ArrayList<>();
+                serviceWrapperList.add(serviceWrapper);
+                resultMap.put(serviceWrapper.getService().getTenantId(), serviceWrapperList);
+            }
+        }
+        return resultMap;
+    }
+
+    public Map<String, Workflow> getWorkflow(List<ProcessInstance> processInstances) {
+
+        Map<String, Workflow> businessIdToWorkflow = new HashMap<>();
+
+        processInstances.forEach(processInstance -> {
+            List<String> userIds = null;
+
+            if(!CollectionUtils.isEmpty(processInstance.getAssignes())){
+                userIds = processInstance.getAssignes().stream().map(User::getUuid).collect(Collectors.toList());
+            }
+
+            Workflow workflow = Workflow.builder()
+                    .action(processInstance.getAction())
+                    .assignes(userIds)
+                    .comments(processInstance.getComment())
+                    .documents(processInstance.getDocuments())
+                    .build();
+
+            businessIdToWorkflow.put(processInstance.getBusinessId(), workflow);
+        });
+
+        return businessIdToWorkflow;
+    }
+
     private StringBuilder getSearchURLWithParams(String tenantId, String businessService) {
 
         StringBuilder url = new StringBuilder(configuration.getWfHost());
@@ -104,5 +190,17 @@ public class WorkflowService {
         Object optional = repository.fetchResult(url, workflowReq);
         response = mapper.convertValue(optional, ProcessInstanceResponse.class);
         return response.getProcessInstances().get(0).getState();
+    }
+
+    public StringBuilder getprocessInstanceSearchURL(String tenantId, String serviceRequestId) {
+
+        StringBuilder url = new StringBuilder(configuration.getWfHost());
+        url.append(configuration.getWfProcessInstanceSearchPath());
+        url.append("?tenantId=");
+        url.append(tenantId);
+        url.append("&businessIds=");
+        url.append(serviceRequestId);
+        return url;
+
     }
 }
