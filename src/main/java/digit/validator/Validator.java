@@ -2,20 +2,20 @@ package digit.validator;
 
 import com.jayway.jsonpath.JsonPath;
 import digit.config.Configuration;
+import digit.repository.ServiceRequestRepository;
 import digit.util.HRMSUtil;
 import digit.util.MdmsUtil;
 import digit.web.models.RequestSearchCriteria;
+import digit.web.models.Service;
 import digit.web.models.ServiceRequest;
+import digit.web.models.ServiceWrapper;
 import org.egov.common.contract.request.RequestInfo;
 import org.egov.common.contract.request.User;
 import org.egov.tracer.model.CustomException;
 import org.springframework.stereotype.Component;
 import org.springframework.util.CollectionUtils;
 
-import java.util.Arrays;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
 import static digit.config.ServiceConstants.*;
 
@@ -25,11 +25,13 @@ public class Validator {
     private final MdmsUtil mdmsUtil;
     private final Configuration config;
     private final HRMSUtil hrmsUtil;
+    private final ServiceRequestRepository repository;
 
-    public Validator(MdmsUtil mdmsUtil, Configuration config, HRMSUtil hrmsUtil) {
+    public Validator(MdmsUtil mdmsUtil, Configuration config, HRMSUtil hrmsUtil, ServiceRequestRepository repository) {
         this.mdmsUtil = mdmsUtil;
         this.config = config;
         this.hrmsUtil = hrmsUtil;
+        this.repository = repository;
     }
 
 
@@ -41,6 +43,22 @@ public class Validator {
         validateDepartment(request, mdmsData);
         if(!errorMap.isEmpty())
             throw new CustomException(errorMap);
+    }
+
+    public void validateUpdate(ServiceRequest request, Object mdmsData){
+
+        String id = request.getPgrEntity().getService().getId();
+        String tenantId = request.getPgrEntity().getService().getTenantId();
+        validateSource(request.getPgrEntity().getService().getSource());
+        validateMDMS(request, mdmsData);
+        validateDepartment(request, mdmsData);
+        validateReOpen(request);
+        RequestSearchCriteria criteria = RequestSearchCriteria.builder().ids(Collections.singleton(id)).tenantId(tenantId).build();
+        List<ServiceWrapper> serviceWrappers = repository.getServiceWrappers(criteria);
+
+        if(CollectionUtils.isEmpty(serviceWrappers))
+            throw new CustomException("INVALID_UPDATE","The record that you are trying to update does not exists");
+
     }
 
     private void validateUserData(ServiceRequest request,Map<String, String> errorMap){
@@ -122,6 +140,26 @@ public class Validator {
 
         if(!errorMap.isEmpty())
             throw new CustomException(errorMap);
+
+    }
+
+    private void validateReOpen(ServiceRequest request){
+
+        if(!request.getPgrEntity().getWorkflow().getAction().equalsIgnoreCase(PGR_WF_REOPEN))
+            return;
+
+
+        Service service = request.getPgrEntity().getService();
+        RequestInfo requestInfo = request.getRequestInfo();
+        Long lastModifiedTime = service.getAuditDetails().getLastModifiedTime();
+
+        if(requestInfo.getUserInfo().getType().equalsIgnoreCase(USERTYPE_CITIZEN)){
+            if(!requestInfo.getUserInfo().getUuid().equalsIgnoreCase(service.getAccountId()))
+                throw new CustomException("INVALID_ACTION","Not authorized to re-open the complain");
+        }
+
+        if(System.currentTimeMillis()-lastModifiedTime > config.getComplainMaxIdleTime())
+            throw new CustomException("INVALID_ACTION","Complaint is closed");
 
     }
 

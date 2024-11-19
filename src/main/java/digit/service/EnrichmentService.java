@@ -72,6 +72,18 @@ public class EnrichmentService {
 
     }
 
+    public void enrichUpdateRequest(ServiceRequest serviceRequest){
+
+        RequestInfo requestInfo = serviceRequest.getRequestInfo();
+        Service service = serviceRequest.getPgrEntity().getService();
+        AuditDetails auditDetails = pgrUtil.getAuditDetails(requestInfo.getUserInfo().getUuid(), service,false);
+
+        service.setAuditDetails(auditDetails);
+
+        //TODO
+//        userService.callUserService(serviceRequest);
+    }
+
     private List<String> getIdList(RequestInfo requestInfo, String tenantId, String idKey,
                                    String idformat, int count) {
         List<IdResponse> idResponses = idGenRepository.getId(requestInfo, tenantId, idKey, idformat, count).getIdResponses();
